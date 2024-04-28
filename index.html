@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>ChatBox</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            overflow-y: hidden;
+            overflow-x: hidden;
+            font-family:Arial, Helvetica, sans-serif;
+
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            margin-left: 440px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            margin-top: 0px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #e6e6e6;
+            color: black;
+            text-align: center;
+            padding: 10px;
+            font-size: 25px;;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+
+        .sidebar {
+            position: absolute;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #c3c3c3;
+            transition: left 0.3s ease;
+            z-index: 1;
+            height: 100%;
+        }
+
+        .sidebar button{
+            background: none;
+            border: none;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .buttonContainer button{
+            margin-bottom: 10px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+            margin-left: -100px;
+            text-align: left;
+            background-color: #f9f9f9;
+        }
+
+        .sidebar-message{
+            margin-bottom: 10px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+           
+            background-color: #f9f9f9;
+        }
+
+        .sidebar-message:hover {
+            background-color: #e6e6e6;
+            border-bottom:4px solid #c3c3c3;
+        }
+
+        .buttonContainer button :hover{
+            background-color: #e6e6e6;
+        }
+
+        .chatBox {
+            flex: 1;
+            padding: 20px;
+            overflow-y: scroll;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .message.sent {
+            background-color: #d0e7f9;
+            float: right;
+        }
+
+        .message.received {
+            background-color: #fff;
+            float: left;
+        }
+
+        .message.sent .message-text {
+            color: #000;
+        }
+
+        .message.received .message-text {
+            color: #000;
+        }
+
+        .message-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .input-area {
+            padding: 10px;
+            border-top: 1px solid #ccc;
+            background-color: #e6e6e6;
+            display: inline;
+            align-items: center;
+            max-width: 97.6%;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            margin-right: 5px;
+            outline: none;
+            width: 85%;
+        }
+
+        .input-area button {
+            padding: 10px 20px;
+            background-color: rgb(10, 110, 255);
+            font-weight: bold;
+            text-shadow: 1px 1px 1px black;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            outline: none;
+            width: auto;
+        }
+
+
+        .hamburger {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 2;
+        }
+
+        .hamburger .line {
+            width: 30px;
+            height: 1px;
+            background-color: #e6e6e6;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger.active .line:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+            background-color: black
+        }
+
+        .hamburger.active .line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active .line:nth-child(3) {
+            background-color: black;
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+         /* New styles for the dialog */
+         .dialog-container {
+            width: 250px;
+            display: none;
+            height: 300px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 3px 3px 20px rgba(63, 62, 62, 0.6);
+            z-index: 9999;
+        }
+
+        /* Style for the login and registration forms inside the dialog */
+        .form input[type="text"],
+        .form input[type="password"],
+        .form input[type="tel"],
+        .form input[type="email"] {
+            width: 100%;
+
+            margin-bottom: 10px;
+            margin-left: -6px;
+            padding: 5px;
+            height: 30px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form button {
+            width: 100%;
+            height: 50px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .form .toggle-link {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+            color: #007bff;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        #accountBtn{
+            transform: translateX(700%);
+            background: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 500px;
+            border: 0px solid gray;
+        }
+
+        @media screen and (max-width: 768px) {
+            .container {
+                margin-left: 0px;
+        }
+
+            .input-area {
+                display: inline;
+                position: relative;
+            }
+
+            input[type="text"]{
+                width: 70%;
+            }
+            input[type="submit"] {
+                width: auto;
+            }
+
+            .hamburger .line {
+            width: 30px;
+            height: 2px;
+            background-color: #5f5e5e;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+        }
+
+        #accountBtn{
+            transform: translateX(300%);
+            background: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 500px;
+            border: 0px solid gray;
+        }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button id="accountBtn"  onclick="openDialog('register')"> <img src="user.png" style="width: 100%; scale: 1.5;"> </button>
+
+            <p id="user" style="margin-bottom: -20px; margin-top: -10px;" >Messages</p>
+            <p><span id="current-time" style="display: none"></span></p>
+        </div>
+        <hr style="border: none; height: 1px; background-color: #c3c3c3; margin: 0px 0px; box-shadow: 1px 1px 2px gray;">
+        <div class="sidebar" id="sidebar">
+            <div style="display: flex; margin-top: 42px;">
+                <img src="user1.png" style="width: 50px;">
+                <p id="CurrentUser"></p>
+            </div><hr style="border: none; height: 1px; background-color: #c3c3c3; margin: 0px 0px; box-shadow: 1px 1px 2px gray;">
+        
+             <input id="account" style="width: 60%; margin-top: 10px; margin-bottom: 10px;" type="text" placeholder="Search"> <button class="enter" style="background-color: rgb(10, 110, 255); font-weight: bold; padding: 8px 12px; border-radius: 20px; color: white; cursor: pointer;" onclick="setUsername()" >search</button><hr style="border: none; height: 1px; background-color: #c3c3c3; margin: 0px 0px; box-shadow: 1px 1px 2px gray;">
+            <button class="sidebar-message" id="AddRoom" onclick="addButton()">Add Contact</button>
+            <div class="QuickRoom" id="buttonContainer"></div>
+            <!-- <hr style="border: none; height: 1px; background-color: #c3c3c3; margin: 0px 0px; box-shadow: -1px -1px 2px gray;"> -->
+
+        </div>
+        <div class="chatBox" id="chatBox">
+             <div id="output-container"> </div>
+        </div>
+        <div class="input-area">
+            <div id="message-form" class="typeMsg">
+                <input type="text" id="message-input" placeholder="Type your message...">
+                <button id="send">Send</button>
+            </div>
+        </div>
+        <div class="hamburger" id="hamburger">
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+        </div>
+
+        <!-- Dialog container with login and registration forms -->
+        <div class="dialog-container" id="dialog">
+            <!-- Registration form -->
+            <form class="form" id="register-form" style="display: none;">
+                <h2 style="text-align: center; margin-top: -10px;">Profile</h2>
+                <input id="usernameR" type="text" placeholder="Username">
+                <input id="phone" type="tel" placeholder="Mobile">
+                <input id="emailR" type="email" placeholder="Email">
+                <input id="passwordR" type="password" placeholder="Password">
+                <button id="submitR" type="submit">Register</button>
+            </form>
+        </div>
+    </div>
+
+    </div>
+
+        <!-- Firebase JavaScript imports -->
+        <script type="module" src="https://www.gstatic.com/firebasejs/9.6.6/firebase-app.js"></script>
+        <script type="module" defer src="https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js"></script>
+        <script type="module" src="notes.js"></script>
+
+        <script>
+
+            
+
+
+            // Function to open the dialog and switch between login and register forms
+  function openDialog(formType) {
+    document.getElementById('dialog').style.display = 'block';
+    if (formType === 'register') {
+        // document.getElementById('login-form').style.display = 'none';
+        document.getElementById('register-form').style.display = 'block';
+    }
+}
+
+
+//         // Function to toggle between login and register forms
+//         function toggleForm(formType) {
+//             if (formType === 'register') {
+//                 document.getElementById('login-form').style.display = 'none';
+//                 document.getElementById('register-form').style.display = 'block';
+//             } else {
+//                 document.getElementById('login-form').style.display = 'block';
+//                 document.getElementById('register-form').style.display = 'none';
+//             }
+//             }
+
+            function setUsername() {
+            const username = document.getElementById('account').value;
+            const noUser = "Message";
+            localStorage.setItem('username', username);
+            window.location.reload();
+        }
+    
+        function setNickName(){
+            const nickname = document.getElementById('nickName').value;
+            localStorage.setItem('nickname', nickname);
+            // window.location.reload();
+        }
+    
+        // Function to retrieve the NickName from localStorage and update the h3 tag
+        function setStoredNickname() {
+        const storedNickname = localStorage.getItem('nickname');
+        if (storedNickname) {
+            document.getElementById('userNameToDisplay').innerText = storedNickname;
+        }
+    }
+    
+    
+        // Function to retrieve the username from localStorage and update the h3 tag
+        function setStoredUsername() {
+            const storedUsername = localStorage.getItem('username');
+            if (storedUsername) {
+                document.getElementById('user').innerText = storedUsername;
+            }
+        }
+    
+        function clearStorage() {
+        // localStorage.clear();
+        window.location.reload();
+    }
+    
+        function scrollToBottom() {
+            var chatContainer = document.getElementById('output-container');
+            chatContainer.scrollToBottom = chatContainer.scrollHeight;
+        }
+    
+    
+        // Call the function to set the stored username when the page loads
+        setStoredUsername();
+        setStoredNickname();
+    
+        // Scroll to the bottom when the page loads
+        window.onload = function() {
+            scrollToBottom();
+        };
+    
+        document.addEventListener('DOMContentLoaded', function() {
+    // Retrieve buttons data from local storage
+    var buttonsData = JSON.parse(localStorage.getItem('buttons')) || [];
+
+    // Recreate buttons from stored data in reverse order
+    for (var i = buttonsData.length - 1; i >= 0; i--) {
+        var buttonInfo = buttonsData[i];
+        var button = document.createElement('button');
+        button.textContent = buttonInfo.text;
+        button.className = 'sidebar-message';
+        button.style.width = "100%";
+        button.style.textAlign = "left"; // Align text to the left
+        button.style.fontSize = "20px";
+        button.style.fontFamily = "arial";
+        button.style.paddingRight = "30px"; // Add padding to accommodate delete button
+        button.style.boxSizing = "border-box"; // Include padding in width calculation
+        button.style.top = buttonInfo.top + 'px';
+        button.setAttribute('data-text', buttonInfo.text); // Store button text as a data attribute
+        
+        // Create delete button for each button
+        var deleteButton = document.createElement('button');
+        deleteButton.textContent = 'x';
+        deleteButton.style.fontSize = "20px";
+        deleteButton.style.color = "#c3c3c3";
+        deleteButton.className = 'delete-button';
+        deleteButton.style.float = "right";
+        deleteButton.style.backgroundColor = "none";
+        deleteButton.style.boxShadow = "none";
+        deleteButton.addEventListener('click', function() {
+            var button = this.parentElement;
+            var buttonText = button.getAttribute('data-text');
+            var index = buttonsData.findIndex(buttonData => buttonData.text === buttonText);
+            if (index !== -1) {
+                buttonsData.splice(index, 1);
+                localStorage.setItem('buttons', JSON.stringify(buttonsData));
+                button.remove();
+            }
+        });
+
+        button.appendChild(deleteButton);
+        document.getElementById('buttonContainer').appendChild(button);
+        
+        // Add event listener to each button
+        button.addEventListener('click', function() {
+            var buttonText = this.getAttribute('data-text'); // Get button text from data attribute
+            localStorage.setItem('username', buttonText);
+            const roomID = localStorage.getItem('username');
+            document.getElementById('user').innerText = roomID;
+            window.location.reload();
+        });
+    }
+});
+
+// Function to add new button
+function addButton() {
+    var buttonText = prompt('Enter button text:');
+    if (buttonText) {
+        var button = document.createElement('button');
+        button.textContent = buttonText;
+        button.className = 'button';
+        
+        // Randomize button position
+        button.style.left = Math.floor(Math.random() * window.innerWidth - 100) + 'px';
+        button.style.top = Math.floor(Math.random() * window.innerHeight - 40) + 'px';
+        
+        // Create delete button for the new button
+        var deleteButton = document.createElement('button');
+        deleteButton.textContent = 'x';
+        deleteButton.className = 'delete-button';
+        deleteButton.style.float = "right";
+        deleteButton.style.backgroundColor = "none";
+        deleteButton.style.boxShadow = "none";
+        deleteButton.addEventListener('click', function() {
+            var button = this.parentElement;
+            var buttonText = button.getAttribute('data-text');
+            var index = buttonsData.findIndex(buttonData => buttonData.text === buttonText);
+            if (index !== -1) {
+                buttonsData.splice(index, 1);
+                localStorage.setItem('buttons', JSON.stringify(buttonsData));
+                button.remove();
+            }
+        });
+
+        button.appendChild(deleteButton);
+        document.getElementById('buttonContainer').appendChild(button);
+        
+        // Save button data to local storage
+        var buttonsData = JSON.parse(localStorage.getItem('buttons')) || [];
+        buttonsData.push({ text: buttonText, left: parseInt(button.style.left), top: parseInt(button.style.top) });
+        localStorage.setItem('buttons', JSON.stringify(buttonsData));
+        
+        // Add event listener to new button
+        button.addEventListener('click', function() {
+            var buttonText = this.getAttribute('data-text'); // Get button text from data attribute
+            localStorage.setItem('username', localStorage.getItem('current'));
+            const roomID = localStorage.getItem('username');
+            document.getElementById('user').innerText = roomID;
+            window.location.reload();
+        });
+    }
+}
+
+  
+
+
+        </script>
+
+    <script type="module">
+
+        const hamburger = document.getElementById('hamburger');
+        const sidebar = document.getElementById('sidebar');
+
+        hamburger.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        });
+
+       
+        // Login code
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyDB_ylrW7hartjCjSAqjjZjUoNSrSX7Et4",
+        authDomain: "blogs-a7325.firebaseapp.com",
+        databaseURL: "https://blogs-a7325-default-rtdb.firebaseio.com",
+        projectId: "blogs-a7325",
+        storageBucket: "blogs-a7325.appspot.com",
+        messagingSenderId: "868013133674",
+        appId: "1:868013133674:web:8ceaa7dfa63ee0d2a0df13",
+        measurementId: "G-RJX09FKMMY"
+    };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Get a reference to the Firebase Authentication service
+const auth = getAuth(app);
+
+// Function to handle registration form submission
+document.getElementById("submitR").addEventListener("click", function(e) {
+    e.preventDefault();
+    const email = document.getElementById('emailR').value;
+    const password = document.getElementById('passwordR').value;
+    const usernameR = document.getElementById('usernameR').value; // Correctly retrieve username
+    
+    createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            // Save user data to the database
+            set(ref(db, 'UserDetails/' + usernameR), {
+                username: usernameR,
+                email: email,
+                phoneNumber: document.getElementById("phone").value,
+                password: password
+            }).then(() => {
+                // Store username in local storage
+                localStorage.setItem('current', usernameR);
+                
+                // Redirect after successful registration
+                window.location.href = "index.html?username=" + encodeURIComponent(usernameR);
+            }).catch((error) => {
+                // Handle database save errors
+                alert(error.message);
+            });
+        })
+        .catch((error) => {
+            // Handle registration errors
+            alert(error.message);
+        });
+});
+
+// Get the username from the URL query parameters
+const urlParams = new URLSearchParams(window.location.search);
+const username = urlParams.get('username');
+
+// Update the UI with the username
+if (username) {
+    document.getElementById('CurrentUser').innerText = username;
+} else {
+    // Check if username is stored in localStorage
+    const storedUsername = localStorage.getItem('current');
+    if (storedUsername) {
+        document.getElementById('CurrentUser').innerText = storedUsername;
+    }
+}
+
+
+    </script>
+
+    
+</body>
+</html>
